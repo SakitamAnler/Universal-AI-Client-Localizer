@@ -1403,10 +1403,28 @@ async function runLocalizationWorkflow(appDir) {
   // 1. Kill running instances
   killApp();
 
+  // Helper for resilient file copy across protected Windows UWP/Program Files system directories
+  function safeCopyFile(src, dest) {
+    try {
+      fs.copyFileSync(src, dest);
+      return true;
+    } catch (e) {
+      log(`直接复制被拒绝 (${e.code || e.message})，正在尝试通过 PowerShell 管理员方式复制...`);
+      if (process.platform === 'win32') {
+        try {
+          const psCmd = `powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-Command Copy-Item -LiteralPath ''${src}'' -Destination ''${dest}'' -Force'"`;
+          execSync(psCmd, { stdio: 'ignore' });
+          if (fs.existsSync(dest)) return true;
+        } catch (err) {}
+      }
+      throw new Error(`权限不足 (EPERM)：目标目录属于 Windows 受保护的系统/微软商店目录 (${path.dirname(dest)})\n【解决方案】：请关闭当前服务窗口，【右键 -> 以管理员身份运行】批处理脚本 (Run_Localizer.bat 或 双击运行汉化.bat) 后重试！\n原始错误: ${e.message}`);
+    }
+  }
+
   // 2. Backup app.asar
   if (!fs.existsSync(backupPath)) {
     log('正在创建 app.asar 的初始安全备份...');
-    fs.copyFileSync(asarPath, backupPath);
+    safeCopyFile(asarPath, backupPath);
     log('安全备份创建成功：' + backupPath);
   } else {
     log('安全备份已存在，跳过备份。备份文件: ' + backupPath);
@@ -1423,9 +1441,6 @@ async function runLocalizationWorkflow(appDir) {
   }
 
   // 4. Unpack app.asar
-  //    注意：必须解包当前 app.asar（而非 .bak 备份），因为 Electron 的
-  //    app.asar.unpacked 配套目录不会被备份，从 .bak 解包会因缺失 unpacked
-  //    文件而失败。重复注入问题由 applyTranslations() 内的幂等检查解决。
   log('正在解包 app.asar...');
   try {
     execSync(`${getAsarCmd()} extract "${asarPath}" "${EXTRACT_DIR}"`, { cwd: WORKSPACE_DIR });
@@ -1453,15 +1468,13 @@ async function runLocalizationWorkflow(appDir) {
 
   // 7. Deploy newly packed app.asar
   log('正在部署新的汉化 app.asar...');
-  try {
-    fs.copyFileSync(tempAsar, asarPath);
-    fs.unlinkSync(tempAsar);
-    log('汉化 app.asar 部署成功！');
-  } catch (e) {
-    throw new Error('复制汉化包到系统程序目录失败 (请检查是否有读写权限): ' + e.message);
+  safeCopyFile(tempAsar, asarPath);
+  if (fs.existsSync(tempAsar)) {
+    try { fs.unlinkSync(tempAsar); } catch(e) {}
   }
+  log('汉化 app.asar 部署成功！');
 
-  log('🎉 Antigravity 2.0 一键汉化成功完成！现在您可以安全启动程序了。');
+  log('🎉 AI 客户端一键汉化成功完成！现在您可以安全启动程序了。');
   log('=================== 汉化流程结束 ===================');
 }
 
@@ -1485,7 +1498,15 @@ function runRestoreWorkflow(appDir) {
     fs.copyFileSync(backupPath, asarPath);
     log('还原原始 app.asar 成功！软件已恢复为纯英文版。');
   } catch (e) {
-    throw new Error('恢复文件失败: ' + e.message);
+    if (process.platform === 'win32') {
+      try {
+        const psCmd = `powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-Command Copy-Item -LiteralPath ''${backupPath}'' -Destination ''${asarPath}'' -Force'"`;
+        execSync(psCmd, { stdio: 'ignore' });
+        log('已通过管理员特权还原原始 app.asar。');
+        return;
+      } catch (err) {}
+    }
+    throw new Error('恢复文件失败 (EPERM 权限拒绝): 请以管理员身份运行脚本！\n详细信息: ' + e.message);
   }
   log('=================== 还原流程结束 ===================');
 }

@@ -1,5 +1,23 @@
 @echo off
 title Universal AI Desktop Client Localizer Service
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo =======================================================
+    echo  正在获取 Windows 管理员权限 (用于微软商店/系统目录读写)...
+    echo =======================================================
+    goto UACPrompt
+) else ( goto gotAdmin )
+
+:UACPrompt
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "cmd.exe", "/c ""%~s0""", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /B
+
+:gotAdmin
+    pushd "%~dp0"
+
 echo =======================================================
 echo  Universal AI Desktop Client Localizer Service
 echo  (Antigravity 2.0 / Codex / OpenCode / Claude)
