@@ -1419,8 +1419,8 @@ async function runLocalizationWorkflow(appDir) {
     throw new Error(`找不到 app.asar 路径: ${asarPath}\n请确认软件是否安装在指定路径。`);
   }
 
-  // 1. Kill running instances
-  killApp();
+  // 1. Kill running instances dynamically
+  killApp(appDir);
 
   function clearReadOnly(targetPath) {
     if (!targetPath) return;
@@ -1529,7 +1529,9 @@ async function runLocalizationWorkflow(appDir) {
   }
   log('汉化 app.asar 部署成功！');
 
-  log('🎉 AI 客户端一键汉化成功完成！现在您可以安全启动程序了。');
+  const intent = identifyAppIntent(appDir);
+  const targetAppName = (intent && intent.name && intent.matched) ? intent.name : 'AI 客户端';
+  log(`🎉 ${targetAppName} 一键汉化成功完成！现在您可以安全启动程序了。`);
   log('=================== 汉化流程结束 ===================');
 }
 
@@ -1546,7 +1548,7 @@ function runRestoreWorkflow(appDir) {
     throw new Error('未找到备份文件 `app.asar.bak`。无法执行恢复！');
   }
 
-  killApp();
+  killApp(appDir);
 
   log('正在从备份恢复原始 app.asar...');
   try {
