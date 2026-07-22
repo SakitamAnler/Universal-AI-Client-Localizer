@@ -327,6 +327,11 @@ function getAppDir(username, useDefault, customPath) {
 const DOM_TRANSLATOR_INJECTION = `
 // Universal AI Client Chinese Localization Engine
 (function() {
+  // 核心环境防御：若处于 Node.js Main 主进程环境（未定义 DOM/window），立即安全退出，防止抛出 ReferenceError
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return;
+  }
+
   const dictionary = {
     // Top Bar & Menus
     "File": "文件",
@@ -510,14 +515,11 @@ function applyTranslations() {
     path.join(EXTRACT_DIR, 'dist', 'preload.js'),
     path.join(EXTRACT_DIR, 'preload.js'),
     path.join(EXTRACT_DIR, 'dist', 'ideInstall', 'wizardPreload.js'),
-    path.join(EXTRACT_DIR, 'dist', 'main.js'),
-    path.join(EXTRACT_DIR, 'main.js'),
     path.join(EXTRACT_DIR, 'dist', 'renderer.js'),
     path.join(EXTRACT_DIR, 'renderer.js'),
     path.join(EXTRACT_DIR, 'dist', 'index.js'),
     path.join(EXTRACT_DIR, 'index.js'),
-    path.join(EXTRACT_DIR, 'bundle.js'),
-    path.join(EXTRACT_DIR, 'app.js')
+    path.join(EXTRACT_DIR, 'bundle.js')
   ];
 
   for (const pPath of candidatePreloadFiles) {
@@ -529,7 +531,7 @@ function applyTranslations() {
   }
 
   if (injectedCount === 0) {
-    // 递归寻找解包目录下的所有 JS 入口/预加载文件进行自适应注入
+    // 递归寻找解包目录下的 Web 渲染与预加载 JS 文件进行自适应注入
     try {
       function scanAndInject(dir, depth = 0) {
         if (depth > 3 || !fs.existsSync(dir)) return;
@@ -539,7 +541,7 @@ function applyTranslations() {
           try {
             if (fs.statSync(full).isDirectory()) {
               scanAndInject(full, depth + 1);
-            } else if (item.endsWith('.js') && (item.includes('preload') || item.includes('main') || item.includes('index') || item.includes('app'))) {
+            } else if (item.endsWith('.js') && (item.includes('preload') || item.includes('renderer') || item.includes('index') || item.includes('bundle'))) {
               if (safeAppendOnce(full, DOM_TRANSLATOR_INJECTION, 'Universal AI Client Chinese Localization Engine', `Web UI 实时汉化引擎 (${path.relative(EXTRACT_DIR, full)})`)) {
                 injectedCount++;
               }
