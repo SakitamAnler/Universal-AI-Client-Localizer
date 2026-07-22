@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" width="100%" height="100%" role="img" aria-labelledby="hero-title hero-desc">
+  <title id="hero-title">Universal AI Client Localizer Hero Banner</title>
+  <desc id="hero-desc">Visual banner for Universal AI Client Localizer showing feature badges, Windows platform support, and control panel UI mockup.</desc>
+
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0d14"/>
+      <stop offset="50%" stop-color="#101524"/>
+      <stop offset="100%" stop-color="#180e29"/>
+    </linearGradient>
+
+    <!-- Title Gradient -->
+    <linearGradient id="title-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#e9d5ff"/>
+      <stop offset="75%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+
+    <!-- Primary Button Gradient -->
+    <linearGradient id="btn-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c4dff"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+
+    <!-- App Card Gradient -->
+    <linearGradient id="card-active-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(124, 77, 255, 0.25)"/>
+      <stop offset="100%" stop-color="rgba(168, 85, 247, 0.08)"/>
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="drop-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Border & Background Container -->
+  <rect x="10" y="10" width="1180" height="420" rx="24" fill="url(#bg)" stroke="rgba(124, 77, 255, 0.35)" stroke-width="1.5" filter="url(#drop-shadow)"/>
+
+  <!-- Subtle Ambient Glow -->
+  <circle cx="200" cy="120" r="180" fill="#7c4dff" opacity="0.08" filter="blur(50px)"/>
+  <circle cx="950" cy="280" r="220" fill="#06b6d4" opacity="0.06" filter="blur(60px)"/>
+
+  <!-- LEFT SECTION: Title & Descriptions -->
+  <g transform="translate(60, 52)">
+    <!-- Top Category Tag -->
+    <text x="0" y="20" font-family="'JetBrains Mono', SFMono-Regular, monospace" font-size="12" font-weight="800" fill="#a855f7" letter-spacing="2">ELECTRON APP LOCALIZATION FRAMEWORK</text>
+    
+    <!-- Main Title -->
+    <text x="0" y="68" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="900" fill="url(#title-gradient)" letter-spacing="-0.5">Universal AI Client</text>
+    <text x="0" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="900" fill="url(#title-gradient)" letter-spacing="-0.5">Localizer</text>
+
+    <!-- Subtitle -->
+    <text x="0" y="152" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="400" fill="#94a3b8">通用 AI 桌面客户端智能一键汉化与语言治理控制中心</text>
+
+    <!-- Feature Badges -->
+    <g transform="translate(0, 185)">
+      <!-- Badge 1: Windows Only -->
+      <rect x="0" y="0" width="180" height="34" rx="17" fill="rgba(255, 179, 0, 0.15)" stroke="rgba(255, 179, 0, 0.4)" stroke-width="1"/>
+      <text x="14" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#ffb300">🪟 Windows 专享版</text>
+
+      <!-- Badge 2: Smart Intent Recognition -->
+      <rect x="192" y="0" width="175" height="34" rx="17" fill="rgba(0, 230, 118, 0.15)" stroke="rgba(0, 230, 118, 0.4)" stroke-width="1"/>
+      <text x="206" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#00e676">⚡ 智能感知匹配</text>
+    </g>
+
+    <!-- Code Pill / Quick Command -->
+    <g transform="translate(0, 250)">
+      <rect x="0" y="0" width="480" height="64" rx="12" fill="rgba(0, 0, 0, 0.5)" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1"/>
+      <text x="20" y="25" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="700" fill="#64748b" letter-spacing="1">QUICK LAUNCH</text>
+      <text x="20" y="48" font-family="'JetBrains Mono', monospace" font-size="15" font-weight="700" fill="#c084fc">> 双击运行 Run_Localizer.bat 一键汉化</text>
+    </g>
+  </g>
+
+  <!-- RIGHT SECTION: Dashboard UI Mockup Frame -->
+  <g transform="translate(590, 42)">
+    <!-- Dashboard Card Outer Shadow Container -->
+    <rect x="0" y="0" width="540" height="356" rx="18" fill="#121624" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1" filter="url(#drop-shadow)"/>
+
+    <!-- Dashboard Title Bar -->
+    <path d="M 0 18 C 0 8, 8 0, 18 0 L 522 0 C 532 0, 540 8, 540 18 L 540 40 L 0 40 Z" fill="#1a2035"/>
+    <circle cx="20" cy="20" r="6" fill="#ff5f56"/>
+    <circle cx="38" cy="20" r="6" fill="#ffbd2e"/>
+    <circle cx="56" cy="20" r="6" fill="#27c93f"/>
+    <text x="270" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#94a3b8" text-anchor="middle">Universal AI Localizer - Dashboard (localhost:3388)</text>
+
+    <!-- Intent Card Area inside Mockup -->
+    <g transform="translate(20, 56)">
+      <rect x="0" y="0" width="500" height="52" rx="10" fill="rgba(124, 77, 255, 0.12)" stroke="rgba(124, 77, 255, 0.3)" stroke-width="1"/>
+      <text x="16" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">🎯 智能意图识别 (Target Intent)</text>
+      <text x="16" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" fill="#ffffff">Antigravity 2.0 (反重力 Agent 客户端)</text>
+      
+      <rect x="400" y="14" width="84" height="24" rx="12" fill="rgba(0, 230, 118, 0.2)" stroke="rgba(0, 230, 118, 0.4)" stroke-width="1"/>
+      <text x="442" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#00e676" text-anchor="middle">匹配成功</text>
+    </g>
+
+    <!-- Interactive App Selector Cards in Mockup -->
+    <g transform="translate(20, 122)">
+      <text x="0" y="12" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#64748b">已感知到的本地客户端 (点击卡片一键切入):</text>
+      
+      <!-- Card 1: Antigravity (Active) -->
+      <g transform="translate(0, 24)">
+        <rect x="0" y="0" width="242" height="66" rx="10" fill="url(#card-active-bg)" stroke="#7c4dff" stroke-width="1.5"/>
+        <text x="14" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#ffffff">🚀 Antigravity 2.0</text>
+        <rect x="175" y="10" width="55" height="18" rx="9" fill="rgba(0, 230, 118, 0.2)"/>
+        <text x="202" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="700" fill="#00e676" text-anchor="middle">当前生效</text>
+        <text x="14" y="50" font-family="'JetBrains Mono', monospace" font-size="10" fill="#cbd5e1">...\AppData\Local\Programs\antigravity</text>
+      </g>
+
+      <!-- Card 2: Codex Desktop -->
+      <g transform="translate(258, 24)">
+        <rect x="0" y="0" width="242" height="66" rx="10" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1"/>
+        <text x="14" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#e2e8f0">💻 Codex / OpenCode</text>
+        <rect x="175" y="10" width="55" height="18" rx="9" fill="rgba(255, 255, 255, 0.08)"/>
+        <text x="202" y="23" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="600" fill="#94a3b8" text-anchor="middle">点击装载</text>
+        <text x="14" y="50" font-family="'JetBrains Mono', monospace" font-size="10" fill="#64748b">...\AppData\Local\Programs\codex</text>
+      </g>
+    </g>
+
+    <!-- Main Action Button in Mockup -->
+    <g transform="translate(20, 230)">
+      <rect x="0" y="0" width="500" height="42" rx="10" fill="url(#btn-gradient)"/>
+      <text x="250" y="26" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">🌐 一键汉化 (English → 简体中文)</text>
+    </g>
+
+    <!-- Terminal Console Log Snippet in Mockup -->
+    <g transform="translate(20, 286)">
+      <rect x="0" y="0" width="500" height="52" rx="8" fill="#090c14" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1"/>
+      <text x="14" y="22" font-family="'JetBrains Mono', monospace" font-size="11" fill="#4ade80">> [INFO] 正在扫描 app.asar 结构... 自动生成备份 app.asar.bak</text>
+      <text x="14" y="40" font-family="'JetBrains Mono', monospace" font-size="11" fill="#8be9fd">> [SUCCESS] 动态 DOM 拦截引擎注入完成，重启目标应用即生效！</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,5 @@
+extracted/
+.workbuddy/
+node_modules/
+*.asar.bak
+.DS_Store

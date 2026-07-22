@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Universal AI Client Localizer - 智能一键汉化控制中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-gradient-1: #0f0c20;
+      --bg-gradient-2: #06060c;
+      --accent: #7c4dff;
+      --accent-glow: rgba(124, 77, 255, 0.4);
+      --success: #00e676;
+      --success-glow: rgba(0, 230, 118, 0.4);
+      --warning: #ffb300;
+      --error: #ff1744;
+      --text-main: #f5f6fa;
+      --text-muted: #8b9bb4;
+      --panel-bg: rgba(20, 20, 35, 0.6);
+      --border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2));
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient background glows */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(0, 230, 118, 0.15) 0%, transparent 70%);
+      bottom: -150px;
+      right: -100px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 900px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      z-index: 1;
+      position: relative;
+      animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .logo-area {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 76px;
+      height: 76px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(124, 77, 255, 0.22), rgba(255, 255, 255, 0.04));
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      margin-bottom: 18px;
+      position: relative;
+      animation: float 4s ease-in-out infinite;
+      transition: all 0.3s ease;
+    }
+
+    .logo-area:hover {
+      border-color: rgba(124, 77, 255, 0.5);
+      box-shadow: 0 12px 35px rgba(124, 77, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .logo-area svg {
+      width: 40px;
+      height: 40px;
+      fill: #fff;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+      fill: #fff;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(120deg, #fff 30%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      font-weight: 300;
+    }
+
+    /* Grid of statuses */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .status-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    .status-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .status-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .status-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.green {
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success-glow);
+      animation: pulseGreen 2s infinite;
+    }
+
+    .dot.amber {
+      background-color: var(--warning);
+      box-shadow: 0 0 10px rgba(255, 179, 0, 0.4);
+      animation: pulseAmber 2s infinite;
+    }
+
+    .dot.red {
+      background-color: var(--error);
+      box-shadow: 0 0 10px rgba(255, 23, 68, 0.4);
+    }
+
+    @keyframes pulseGreen {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.6; }
+    }
+
+    @keyframes pulseAmber {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.6; }
+    }
+
+    /* Configuration Panel Style */
+    .config-panel {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 24px 28px;
+      margin-bottom: 30px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .config-panel:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(124, 77, 255, 0.2);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .panel-subtitle {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-subtitle svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--accent);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .input-group input {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(124, 77, 255, 0.25), inset 0 1px 2px rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    /* Custom Checkbox Design */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding-top: 26px; /* Align horizontally with input */
+    }
+
+    .custom-checkbox-container {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      padding-left: 28px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      user-select: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .custom-checkbox-container:hover {
+      color: #fff;
+    }
+
+    .custom-checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkbox-checkmark {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 0;
+      height: 18px;
+      width: 18px;
+      background-color: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .custom-checkbox-container:hover input ~ .checkbox-checkmark {
+      border-color: var(--accent);
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .custom-checkbox-container input:checked ~ .checkbox-checkmark {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(124, 77, 255, 0.4);
+    }
+
+    .checkbox-checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+
+    .custom-checkbox-container input:checked ~ .checkbox-checkmark:after {
+      display: block;
+    }
+
+    .custom-checkbox-container .checkbox-checkmark:after {
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Animation transition for custom path block */
+    .custom-path-wrapper {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .custom-path-wrapper.visible {
+      max-height: 120px;
+      opacity: 1;
+      margin-top: 10px;
+    }
+
+    /* Actions Panel */
+    .actions-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 35px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), #b388ff);
+      color: #fff;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 18px 30px;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 8px 30px var(--accent-glow);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(124, 77, 255, 0.6);
+      filter: brightness(1.1);
+    }
+
+    .primary-btn:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .primary-btn:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.3);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .secondary-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .sec-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .sec-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .sec-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Terminal Console */
+    .console-panel {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* App Selector Cards Component & High-Contrast Select Styles */
+    select {
+      background-color: #121225 !important;
+      color: #ffffff !important;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b9bb4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px !important;
+    }
+
+    select option {
+      background-color: #16162a !important;
+      color: #ffffff !important;
+      padding: 12px 16px !important;
+      font-size: 0.92rem;
+    }
+
+    .app-cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+    }
+
+    .app-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-card:hover {
+      background: rgba(124, 77, 255, 0.1);
+      border-color: rgba(124, 77, 255, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .app-card.selected {
+      background: rgba(124, 77, 255, 0.18) !important;
+      border: 1.5px solid #7c4dff !important;
+      box-shadow: 0 0 20px rgba(124, 77, 255, 0.4) !important;
+    }
+
+    .app-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-card-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-card-badge {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .app-card-badge.active {
+      background: rgba(0, 230, 118, 0.2);
+      color: var(--success);
+      border: 1px solid rgba(0, 230, 118, 0.4);
+    }
+
+    .app-card-badge.inactive {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .app-card-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #cbd5e0;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 10px;
+      border-radius: 8px;
+      word-break: break-all;
+      line-height: 1.4;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 10px;
+    }
+
+    .console-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .console-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .console-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .console-body {
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      color: #8be9fd;
+      height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      scroll-behavior: smooth;
+    }
+
+    .console-body::-webkit-scrollbar {
+      width: 6px;
+    }
+    .console-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .console-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+    .console-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .console-line {
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .console-line.success { color: var(--success); }
+    .console-line.error { color: var(--error); }
+    .console-line.info { color: var(--text-muted); }
+
+    .loader-ring {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    <header>
+      <div class="logo-area">
+        <svg viewBox="0 0 24 24">
+          <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-1.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+        </svg>
+      </div>
+      <h1>Universal AI Client Localizer</h1>
+      <p class="subtitle">通用 AI 桌面客户端一键汉化控制中心 (Antigravity 2.0 / Codex / OpenCode)</p>
+    </header>
+
+    <!-- State indicators -->
+    <div class="status-grid">
+      <div class="status-card">
+        <span class="status-title">应用检测</span>
+        <span class="status-value" id="status-installed"><span class="dot red"></span>未检测</span>
+      </div>
+      <div class="status-card">
+        <span class="status-title">备份状态</span>
+        <span class="status-value" id="status-backup"><span class="dot red"></span>无备份</span>
+      </div>
+      <div class="status-card">
+        <span class="status-title">进程监控</span>
+        <span class="status-value" id="status-running"><span class="dot red"></span>未运行</span>
+      </div>
+    </div>
+
+    <!-- Target Intent Recognition Badge Card -->
+    <div style="background: rgba(124, 77, 255, 0.1); border: 1px solid rgba(124, 77, 255, 0.25); border-radius: 12px; padding: 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.5rem;">🎯</span>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">智能意图识别 (Target Intent)</div>
+          <div id="intent-display-name" style="font-weight: 600; color: #fff; font-size: 1.05rem; margin-top: 2px;">检测中...</div>
+        </div>
+      </div>
+      <div id="intent-badge" style="font-size: 0.8rem; background: rgba(0, 230, 118, 0.2); color: var(--success); padding: 5px 12px; border-radius: 20px; font-weight: 600; white-space: nowrap;">
+        自动识别
+      </div>
+    </div>
+
+    <!-- Dynamic Path Configuration Card -->
+    <div class="config-panel">
+      <h3 class="panel-subtitle">
+        <svg viewBox="0 0 24 24">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+        配置部署目标路径
+      </h3>
+
+      <!-- Visual Interactive App Cards Grid Component -->
+      <div class="input-group" style="margin-bottom: 20px;">
+        <label>自动扫描到的本地 AI 客户端 (点击卡片一键装载路径)</label>
+        <div id="app-cards-container" class="app-cards-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 18px;">
+        <label for="select-detected-app">或通过下拉框选择已匹配应用</label>
+        <select id="select-detected-app" onchange="onAppDropdownSelect()" style="width: 100%; padding: 12px 14px; background: #121225 !important; border: 1px solid var(--border-color); border-radius: 10px; color: #ffffff !important; font-family: inherit; font-size: 0.9rem; outline: none; cursor: pointer;">
+          <option value="" style="background: #16162a; color: #ffffff;">-- 点击选择已扫描到的客户端 --</option>
+        </select>
+      </div>
+
+      <!-- 隐藏的诱饵输入框，用于吸引并消耗密码管理器及浏览器的自动填充动作 -->
+      <div style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+        <input type="text" id="fake-username" name="username" autocomplete="username" tabindex="-1">
+        <input type="password" id="fake-password" name="password" autocomplete="current-password" tabindex="-1">
+      </div>
+
+      <div class="input-row">
+        <div class="input-group">
+          <label for="tgt-win-owner" id="lbl-win-owner">Windows 系统账户名 (Host Account)</label>
+          <input type="text" id="tgt-win-owner" name="tgt-win-owner" placeholder="例如: 11215" 
+                 autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" 
+                 readonly onfocus="this.removeAttribute('readonly')" onblur="this.setAttribute('readonly', true)"
+                 oninput="saveSettings(); updateStatus();">
+        </div>
+        <div class="checkbox-group" style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 15px; padding-top: 26px;">
+          <label class="custom-checkbox-container" style="margin-bottom: 0;">
+            <input type="checkbox" id="chk-default-path" checked onchange="togglePathInput()">
+            <span class="checkbox-checkmark"></span>
+            <span id="lbl-default-path">使用 Windows 默认安装路径</span>
+          </label>
+          <button class="sec-btn" id="btn-detect" onclick="manualDetectPath()" style="padding: 10px 18px; font-size: 0.85rem; margin-top: 0; white-space: nowrap; border-radius: 10px; background: rgba(124, 77, 255, 0.1); border-color: rgba(124, 77, 255, 0.2); transition: all 0.2s ease;">
+            <svg style="width:14px; height:14px; fill:currentColor; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            立即检测路径
+          </button>
+        </div>
+      </div>
+
+      <div class="custom-path-wrapper" id="custom-path-wrapper">
+        <div class="input-group">
+          <label for="input-custom-path">自定义程序路径 (APP_DIR)</label>
+          <input type="text" id="input-custom-path" name="custom-app-dir" placeholder="C:\Users\用户名\AppData\Local\Programs\antigravity" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="saveAndTriggerStatus()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-panel">
+      <button class="primary-btn" id="btn-localize" onclick="localize()">
+        <svg style="width:24px; height:24px; fill:currentColor" viewBox="0 0 24 24">
+          <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-1.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+        </svg>
+        <span>一键汉化 (English → 简体中文)</span>
+      </button>
+
+      <div class="secondary-actions">
+        <button class="sec-btn" id="btn-restore" onclick="restore()">
+          <svg style="width:18px; height:18px; fill:currentColor" viewBox="0 0 24 24">
+            <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8z"/>
+          </svg>
+          还原英文原版
+        </button>
+        <button class="sec-btn" id="btn-launch" onclick="launch()">
+          <svg style="width:18px; height:18px; fill:currentColor" viewBox="0 0 24 24">
+            <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/>
+          </svg>
+          启动软件
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Console Output -->
+    <div class="console-panel">
+      <div class="console-header">
+        <span class="console-title">
+          <svg style="width:16px; height:16px; fill:currentColor" viewBox="0 0 24 24">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H4v-2h8v2zm8-4H4V8h16v4z"/>
+          </svg>
+          实时部署日志 (Real-time logs)
+        </span>
+        <div class="console-dots">
+          <span class="console-dot"></span>
+          <span class="console-dot"></span>
+          <span class="console-dot"></span>
+        </div>
+      </div>
+      <div class="console-body" id="console">
+        <div class="console-line info">[系统] 等待操作... 双击 "双击运行汉化.bat" 确保服务完全启动。</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3388';
+    const consoleEl = document.getElementById('console');
+
+    // UI elements (Refactored to tgt-win-owner with readonly armor to block password manager autofill hooks)
+    const inputUsername = document.getElementById('tgt-win-owner');
+    const chkDefaultPath = document.getElementById('chk-default-path');
+    const inputCustomPath = document.getElementById('input-custom-path');
+    const customPathWrapper = document.getElementById('custom-path-wrapper');
+
+    // Load saved settings from localStorage
+    inputUsername.value = localStorage.getItem('localizer_username') || '';
+    const savedUseDefault = localStorage.getItem('localizer_use_default') !== 'false';
+    chkDefaultPath.checked = savedUseDefault;
+    inputCustomPath.value = localStorage.getItem('localizer_custom_path') || '';
+
+    function togglePathInput() {
+      const useDefault = chkDefaultPath.checked;
+      if (useDefault) {
+        customPathWrapper.classList.remove('visible');
+      } else {
+        customPathWrapper.classList.add('visible');
+      }
+      saveSettings();
+    }
+
+    function getParams() {
+      const username = inputUsername.value.trim();
+      const useDefault = chkDefaultPath.checked;
+      const customPath = inputCustomPath.value.trim();
+      return { username, useDefault, customPath };
+    }
+
+    function saveSettings() {
+      const params = getParams();
+      localStorage.setItem('localizer_username', params.username);
+      localStorage.setItem('localizer_use_default', params.useDefault);
+      localStorage.setItem('localizer_custom_path', params.customPath);
+    }
+
+    function saveAndTriggerStatus() {
+      saveSettings();
+      updateStatus();
+    }
+
+    function onAppDropdownSelect() {
+      const selectAppEl = document.getElementById('select-detected-app');
+      const chosenPath = selectAppEl.value;
+      if (!chosenPath) return;
+
+      chkDefaultPath.checked = false;
+      togglePathInput();
+      inputCustomPath.value = chosenPath;
+      saveSettings();
+      updateStatus();
+    }
+
+    function selectAppCard(chosenPath) {
+      if (!chosenPath) return;
+      chkDefaultPath.checked = false;
+      togglePathInput();
+      inputCustomPath.value = chosenPath;
+      saveSettings();
+      updateStatus();
+    }
+
+    function appendLog(text) {
+      const line = document.createElement('div');
+      line.className = 'console-line';
+      
+      if (text.includes('🎉') || text.includes('成功') || text.includes('完成')) {
+        line.classList.add('success');
+      } else if (text.includes('失败') || text.includes('错误') || text.includes('Error')) {
+        line.classList.add('error');
+      } else if (text.includes('===') || text.includes('等待')) {
+        line.classList.add('info');
+      }
+      
+      line.textContent = text;
+      consoleEl.appendChild(line);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    async function updateStatus() {
+      const params = getParams();
+
+      try {
+        const queryStr = `?username=${encodeURIComponent(params.username)}&useDefault=${params.useDefault}&customPath=${encodeURIComponent(params.customPath)}`;
+        const res = await fetch(`${API_BASE}/api/status${queryStr}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        const isWin = data.platform === 'win32';
+        const sysLabel = isWin ? 'Windows' : (data.platform === 'linux' ? 'Linux' : data.platform);
+        
+        document.getElementById('lbl-win-owner').textContent = `${sysLabel} 系统账户名 (Host Account)`;
+        document.getElementById('lbl-default-path').textContent = `使用 ${sysLabel} 默认安装路径`;
+        
+        if (data.defaultUsername) {
+          inputUsername.placeholder = `当前系统用户: ${data.defaultUsername}`;
+          if (!inputUsername.value) {
+            inputUsername.value = data.defaultUsername;
+            saveSettings();
+          }
+        }
+        
+        if (isWin) {
+          inputCustomPath.placeholder = "C:\\Users\\用户名\\AppData\\Local\\Programs\\antigravity";
+        } else {
+          inputCustomPath.placeholder = "/home/用户名/Antigravity/Antigravity-x64";
+        }
+        
+        // Intent Recognition Display
+        const intentEl = document.getElementById('intent-display-name');
+        const badgeEl = document.getElementById('intent-badge');
+        if (data.intent && data.intent.matched) {
+          intentEl.textContent = `${data.intent.name} (${data.intent.reason || '匹配成功'})`;
+          badgeEl.textContent = '匹配成功';
+          badgeEl.style.background = 'rgba(0, 230, 118, 0.2)';
+          badgeEl.style.color = 'var(--success)';
+        } else {
+          intentEl.textContent = data.intent ? data.intent.name : '未知应用 / 路径未配置';
+          badgeEl.textContent = '未匹配应用';
+          badgeEl.style.background = 'rgba(255, 179, 0, 0.2)';
+          badgeEl.style.color = 'var(--warning)';
+        }
+
+        // Installed Apps Dropdown & App Cards Grid
+        const selectAppEl = document.getElementById('select-detected-app');
+        const cardsContainer = document.getElementById('app-cards-container');
+        cardsContainer.innerHTML = '';
+
+        if (data.installedApps && data.installedApps.length > 0) {
+          const currentVal = selectAppEl.value;
+          selectAppEl.innerHTML = '<option value="" style="background: #16162a; color: #ffffff;">-- 已发现 ' + data.installedApps.length + ' 个本地 AI 客户端 (点击快捷切换) --</option>';
+          
+          data.installedApps.forEach(app => {
+            // Dropdown option styling
+            const opt = document.createElement('option');
+            opt.value = app.path;
+            opt.style.backgroundColor = '#16162a';
+            opt.style.color = '#ffffff';
+            opt.textContent = `${app.name} -> [${app.path}]`;
+            selectAppEl.appendChild(opt);
+
+            // Visual App Card rendering
+            const currentEffectivePath = (params.useDefault === false || params.useDefault === 'false') && params.customPath ? params.customPath : data.asarPath;
+            const isSelected = currentEffectivePath && currentEffectivePath.toLowerCase().includes(app.path.toLowerCase());
+            const icon = app.id === 'antigravity' ? '🚀' : (app.id === 'codex' ? '💻' : '⚡');
+            
+            const card = document.createElement('div');
+            card.className = `app-card ${isSelected ? 'selected' : ''}`;
+            card.onclick = () => selectAppCard(app.path);
+            card.innerHTML = `
+              <div class="app-card-header">
+                <div class="app-card-title"><span>${icon}</span> ${app.name}</div>
+                <span class="app-card-badge ${isSelected ? 'active' : 'inactive'}">${isSelected ? '🎯 当前生效' : '点击装载'}</span>
+              </div>
+              <div class="app-card-path">${app.path}</div>
+            `;
+            cardsContainer.appendChild(card);
+          });
+
+          if (currentVal) selectAppEl.value = currentVal;
+        } else {
+          selectAppEl.innerHTML = '<option value="" style="background: #16162a; color: #ffffff;">-- 未自动扫描到已安装客户端 (可下方手动输入) --</option>';
+          cardsContainer.innerHTML = `
+            <div style="grid-column: 1/-1; padding: 16px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-muted); font-size: 0.85rem; text-align: center;">
+              未扫描到默认目录下的安装包，您可以在下方手动输入任意 APP 路径。
+            </div>
+          `;
+        }
+
+        // Installed status
+        const insEl = document.getElementById('status-installed');
+        if (data.isInstalled) {
+          insEl.innerHTML = '<span class="dot green"></span>已检测到程序';
+        } else {
+          insEl.innerHTML = '<span class="dot red"></span>未检测到';
+        }
+
+        // Backup status
+        const bakEl = document.getElementById('status-backup');
+        if (data.hasBackup) {
+          bakEl.innerHTML = '<span class="dot green"></span>已备份';
+          document.getElementById('btn-restore').disabled = false;
+        } else {
+          bakEl.innerHTML = '<span class="dot amber"></span>无备份';
+          document.getElementById('btn-restore').disabled = true;
+        }
+
+        // Running status
+        const runEl = document.getElementById('status-running');
+        if (data.isRunning) {
+          runEl.innerHTML = '<span class="dot amber"></span>运行中 (占锁)';
+        } else {
+          runEl.innerHTML = '<span class="dot green"></span>已关闭 (就绪)';
+        }
+      } catch (e) {
+        // Server might be starting or down
+        document.getElementById('status-installed').innerHTML = '<span class="dot red"></span>未连接服务';
+        document.getElementById('status-backup').innerHTML = '<span class="dot red"></span>未连接服务';
+        document.getElementById('status-running').innerHTML = '<span class="dot red"></span>未连接服务';
+      }
+    }
+
+    let isServiceConnected = true; // 记录当前服务连接状态，用于心跳状态突变时刷新指示灯
+    let lastLogsHash = ''; // 记录上一次渲染的日志特征值，避免无新日志时重绘导致滚动条闪烁滑动
+
+    async function fetchLogs() {
+      try {
+        const res = await fetch(`${API_BASE}/api/logs`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        // 增量比较：如果日志内容与上次完全一致，则直接跳过重绘，使滑块稳如泰山！
+        const currentLogsStr = JSON.stringify(data.logs);
+        if (currentLogsStr === lastLogsHash) {
+          if (!isServiceConnected) {
+            isServiceConnected = true;
+            updateStatus();
+          }
+          return;
+        }
+        
+        lastLogsHash = currentLogsStr;
+        consoleEl.innerHTML = '';
+        data.logs.forEach(appendLog);
+        
+        // 如果之前是断开状态，现在连上了，自动触发一次检测刷新
+        if (!isServiceConnected) {
+          isServiceConnected = true;
+          updateStatus();
+        }
+      } catch (e) {
+        // 心跳断开，立即标记并更新指示灯为“未连接服务”
+        isServiceConnected = false;
+        document.getElementById('status-installed').innerHTML = '<span class="dot red"></span>未连接服务';
+        document.getElementById('status-backup').innerHTML = '<span class="dot red"></span>未连接服务';
+        document.getElementById('status-running').innerHTML = '<span class="dot red"></span>未连接服务';
+      }
+    }
+
+    async function setButtonLoading(btnId, isLoading, loadingText = '') {
+      const btn = document.getElementById(btnId);
+      if (isLoading) {
+        btn.disabled = true;
+        btn.dataset.originalHtml = btn.innerHTML;
+        btn.innerHTML = `<span class="loader-ring"></span> <span>${loadingText}</span>`;
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.originalHtml;
+      }
+    }
+
+    async function localize() {
+      if (!confirm('汉化流程将临时关闭正在运行的 Antigravity 2.0，是否继续？')) {
+        return;
+      }
+      setButtonLoading('btn-localize', true, '正在汉化打包中，请稍候...');
+      try {
+        const params = getParams();
+        const res = await fetch(`${API_BASE}/api/localize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        });
+        const data = await res.json();
+        fetchLogs();
+        if (data.success) {
+          alert('🎉 汉化打包部署成功！原生菜单、托盘及 Web UI 已完成汉化。');
+        } else {
+          alert('❌ 汉化失败: ' + data.error);
+        }
+      } catch (e) {
+        alert('❌ 服务无响应，请确保 localize.js 服务正在运行。');
+      } finally {
+        setButtonLoading('btn-localize', false);
+        updateStatus();
+      }
+    }
+
+    async function restore() {
+      if (!confirm('确定将软件还原为纯英文原版吗？')) {
+        return;
+      }
+      setButtonLoading('btn-restore', true, '还原中...');
+      try {
+        const params = getParams();
+        const res = await fetch(`${API_BASE}/api/restore`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        });
+        const data = await res.json();
+        fetchLogs();
+        if (data.success) {
+          alert('🎉 已成功还原为官方英文版！');
+        } else {
+          alert('❌ 还原失败: ' + data.error);
+        }
+      } catch (e) {
+        alert('❌ 服务无响应。');
+      } finally {
+        setButtonLoading('btn-restore', false);
+        updateStatus();
+      }
+    }
+
+    async function launch() {
+      try {
+        const params = getParams();
+        const res = await fetch(`${API_BASE}/api/launch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        });
+        const data = await res.json();
+        fetchLogs();
+        if (data.success) {
+          appendLog('[系统] Antigravity 2.0 启动成功！');
+        } else {
+          alert('❌ 启动失败: ' + data.error);
+        }
+      } catch (e) {
+        alert('❌ 服务无响应。');
+      } finally {
+        setTimeout(updateStatus, 3000);
+      }
+    }
+
+    // 手动点击触发路径检测函数
+    async function manualDetectPath() {
+      saveSettings();
+      appendLog('[系统] 正在检测配置的安装路径，请稍候...');
+      const btn = document.getElementById('btn-detect');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="loader-ring" style="width: 14px; height: 14px; border-width: 2px;"></span> 正在检测...`;
+      try {
+        await updateStatus();
+        appendLog('[系统] 检测路径完成，已更新上方应用检测指示灯。');
+      } catch (e) {
+        appendLog('[系统] 检测失败，服务未响应。');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // Call togglePathInput on load to set initial visibility and triggers
+    togglePathInput();
+
+    // 运行的时候先自动检测一次
+    updateStatus();
+
+    // 自动轮询拉取最新打包日志，不再自动探测状态以防篡改或打字时冲突
+    setInterval(fetchLogs, 2500);
+  </script>
+</body>
+</html>
