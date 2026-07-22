@@ -190,62 +190,52 @@ function detectInstalledApps() {
   addIfValid('claude', 'Claude Desktop 客户端', path.join(localAppData, 'Programs', 'claude-desktop'));
   addIfValid('windsurf', 'Windsurf AI 客户端', path.join(localAppData, 'Programs', 'Windsurf'));
 
-  // 2. 深度扫描 Windows Store (Packages 与 WindowsApps 目录)
+  // 2. 深度扫描 Windows Store / MSIX 打包应用 (利用 PowerShell Get-AppxPackage API 穿透 WindowsApps 目录 EPERM 权限)
   if (isWin) {
-    if (localAppData) {
-      const packagesDir = path.join(localAppData, 'Packages');
-      if (fs.existsSync(packagesDir)) {
+    try {
+      const psOutput = execSync(`powershell -NoProfile -Command "Get-AppxPackage | Select-Object Name, InstallLocation | ConvertTo-Json -Compress"`, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+      if (psOutput && psOutput.trim()) {
+        let pkgs = [];
         try {
-          const pkgs = fs.readdirSync(packagesDir);
-          for (const pkg of pkgs) {
-            const lowerPkg = pkg.toLowerCase();
-            if (lowerPkg.includes('chatgpt') || lowerPkg.includes('openai')) {
-              const pkgPath = path.join(packagesDir, pkg);
-              addIfValid('chatgpt', 'ChatGPT (微软商店版)', pkgPath);
-              addIfValid('chatgpt', 'ChatGPT (微软商店版)', path.join(pkgPath, 'app'));
-              addIfValid('chatgpt', 'ChatGPT (微软商店版)', path.join(pkgPath, 'LocalCache'));
-              addIfValid('chatgpt', 'ChatGPT (微软商店版)', path.join(pkgPath, 'LocalCache', 'Local'));
-            } else if (lowerPkg.includes('codex')) {
-              const pkgPath = path.join(packagesDir, pkg);
-              addIfValid('codex', 'Codex (微软商店版)', pkgPath);
-              addIfValid('codex', 'Codex (微软商店版)', path.join(pkgPath, 'app'));
-              addIfValid('codex', 'Codex (微软商店版)', path.join(pkgPath, 'LocalCache'));
-            } else if (lowerPkg.includes('opencode')) {
-              const pkgPath = path.join(packagesDir, pkg);
-              addIfValid('opencode', 'OpenCode (微软商店版)', pkgPath);
-              addIfValid('opencode', 'OpenCode (微软商店版)', path.join(pkgPath, 'app'));
-            }
-          }
-        } catch (e) {}
-      }
-    }
+          const parsed = JSON.parse(psOutput.trim());
+          pkgs = Array.isArray(parsed) ? parsed : [parsed];
+        } catch(e){}
 
-    // 扫描 C:\Program Files\WindowsApps 系统级微软商店全量打包目录
-    const winAppsDir = path.join(programFiles, 'WindowsApps');
-    if (fs.existsSync(winAppsDir)) {
-      try {
-        const apps = fs.readdirSync(winAppsDir);
-        for (const appItem of apps) {
-          const lowerItem = appItem.toLowerCase();
-          if (lowerItem.includes('chatgpt') || lowerItem.includes('openai')) {
-            const appPath = path.join(winAppsDir, appItem);
-            addIfValid('chatgpt', 'ChatGPT (微软商店 WindowsApps 版)', appPath);
-            addIfValid('chatgpt', 'ChatGPT (微软商店 WindowsApps 版)', path.join(appPath, 'app'));
-          } else if (lowerItem.includes('codex')) {
-            const appPath = path.join(winAppsDir, appItem);
-            addIfValid('codex', 'Codex (微软商店 WindowsApps 版)', appPath);
-            addIfValid('codex', 'Codex (微软商店 WindowsApps 版)', path.join(appPath, 'app'));
-          } else if (lowerItem.includes('opencode')) {
-            const appPath = path.join(winAppsDir, appItem);
-            addIfValid('opencode', 'OpenCode (微软商店 WindowsApps 版)', appPath);
-            addIfValid('opencode', 'OpenCode (微软商店 WindowsApps 版)', path.join(appPath, 'app'));
+        for (const pkg of pkgs) {
+          if (!pkg || !pkg.InstallLocation) continue;
+          const name = (pkg.Name || '').toLowerCase();
+          const loc = pkg.InstallLocation;
+
+          if (name.includes('claude') || name.includes('anthropic')) {
+            addIfValid('claude', 'Claude Desktop 客户端', loc);
+            addIfValid('claude', 'Claude Desktop 客户端', path.join(loc, 'app'));
+          } else if (name.includes('chatgpt') || name.includes('openai')) {
+            addIfValid('chatgpt', 'ChatGPT (微软商店 WindowsApps 版)', loc);
+            addIfValid('chatgpt', 'ChatGPT (微软商店 WindowsApps 版)', path.join(loc, 'app'));
+          } else if (name.includes('codex')) {
+            addIfValid('codex', 'Codex (微软商店 WindowsApps 版)', loc);
+            addIfValid('codex', 'Codex (微软商店 WindowsApps 版)', path.join(loc, 'app'));
+          } else if (name.includes('opencode')) {
+            addIfValid('opencode', 'OpenCode (微软商店 WindowsApps 版)', loc);
+            addIfValid('opencode', 'OpenCode (微软商店 WindowsApps 版)', path.join(loc, 'app'));
           }
         }
-      } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  const finalDetected = [];
+  const seenAsarPaths = new Set();
+  for (const app of detected) {
+    const resDir = getResourcesDir(app.path);
+    const asarPath = path.join(resDir, 'app.asar').toLowerCase();
+    if (!seenAsarPaths.has(asarPath)) {
+      seenAsarPaths.add(asarPath);
+      finalDetected.push(app);
     }
   }
 
-  return detected;
+  return finalDetected;
 }
 
 // Check if app processes are running
