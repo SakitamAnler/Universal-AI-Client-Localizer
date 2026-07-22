@@ -1403,22 +1403,58 @@ async function runLocalizationWorkflow(appDir) {
   // 1. Kill running instances
   killApp();
 
+  function clearReadOnly(targetPath) {
+    if (!targetPath) return;
+    try {
+      if (fs.existsSync(targetPath)) {
+        fs.chmodSync(targetPath, 0o666);
+      }
+    } catch (e) {}
+    if (process.platform === 'win32') {
+      try {
+        execSync(`attrib -R "${targetPath}"`, { stdio: 'ignore' });
+      } catch (e) {}
+    }
+  }
+
   // Helper for resilient file copy across protected Windows UWP/Program Files system directories
   function safeCopyFile(src, dest) {
+    const destDir = path.dirname(dest);
+    clearReadOnly(src);
+    clearReadOnly(destDir);
+    clearReadOnly(dest);
+
+    // 1. 尝试常规 copyFileSync
     try {
       fs.copyFileSync(src, dest);
+      clearReadOnly(dest);
       return true;
-    } catch (e) {
-      log(`直接复制被拒绝 (${e.code || e.message})，正在尝试通过 PowerShell 管理员方式复制...`);
-      if (process.platform === 'win32') {
-        try {
-          const psCmd = `powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-Command Copy-Item -LiteralPath ''${src}'' -Destination ''${dest}'' -Force'"`;
-          execSync(psCmd, { stdio: 'ignore' });
-          if (fs.existsSync(dest)) return true;
-        } catch (err) {}
-      }
-      throw new Error(`权限不足 (EPERM)：目标目录属于 Windows 受保护的系统/微软商店目录 (${path.dirname(dest)})\n【解决方案】：请关闭当前服务窗口，【右键 -> 以管理员身份运行】批处理脚本 (Run_Localizer.bat 或 双击运行汉化.bat) 后重试！\n原始错误: ${e.message}`);
+    } catch (e) {}
+
+    // 2. 如果常规复制触发 EPERM (如受保护的 WindowsApps 目录或只读属性锁定)
+    if (process.platform === 'win32') {
+      try {
+        // 先解除目标文件夹 ACL 限制与只读锁定
+        execSync(`icacls "${destDir}" /grant Administrators:F /T /C`, { stdio: 'ignore' });
+        execSync(`powershell -Command "Copy-Item -LiteralPath '${src}' -Destination '${dest}' -Force"`, { stdio: 'ignore' });
+        if (fs.existsSync(dest)) {
+          clearReadOnly(dest);
+          return true;
+        }
+      } catch (err) {}
+
+      try {
+        // 如果依然被阻拦，通过 Start-Process -Verb RunAs -Wait 同步等待提权复制
+        const psScript = `attrib -R ''${dest}''; Copy-Item -LiteralPath ''${src}'' -Destination ''${dest}'' -Force`;
+        execSync(`powershell -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command ${psScript}'"`, { stdio: 'ignore' });
+        if (fs.existsSync(dest)) {
+          clearReadOnly(dest);
+          return true;
+        }
+      } catch (err) {}
     }
+
+    throw new Error(`权限拒绝 (EPERM)：Windows 系统保护了该目录文件 (${destDir})\n【解决办法】：请在 Windows 中【右键 -> 以管理员身份运行】Run_Localizer.bat 批处理脚本后再试。`);
   }
 
   // 2. Backup app.asar
