@@ -655,41 +655,85 @@ async function runLocalizationWorkflow(appDir) {
       throw new Error('无法找到翻译源文件。请确保 zh-CN-claude.json 存在于工具目录。');
     }
 
-    // 写入目标（WindowsApps 受系统保护，需要多级权限升级）
+    // 写入目标（WindowsApps 受 MSIX 包完整性保护，需要多级权限升级）
     const os = require('os');
     const tmpFile = path.join(os.tmpdir(), 'zh-CN-claude-tmp.json');
     fs.writeFileSync(tmpFile, translationData);
 
     log(`正在写入 zh-CN.json 到 ${zhCNDest} ...`);
     let writeSuccess = false;
+
+    // 方法 1：直接复制（运行工具时已有管理员权限则直接成功）
     try {
       fs.copyFileSync(tmpFile, zhCNDest);
       writeSuccess = true;
       log('zh-CN.json 写入成功（直接复制）。');
-    } catch (e) {
-      if (process.platform === 'win32') {
-        try {
-          execSync(`takeown /F "${resourcesDir}" /A /D Y`, { stdio: 'ignore' });
-          execSync(`icacls "${resourcesDir}" /grant Administrators:F /C`, { stdio: 'ignore' });
-          fs.copyFileSync(tmpFile, zhCNDest);
+    } catch (e) {}
+
+    // 方法 2：当前会话 takeown + icacls 夺权后再复制
+    if (!writeSuccess && process.platform === 'win32') {
+      try {
+        execSync(`takeown /F "${resourcesDir}" /A /R /D Y 2>nul`, { stdio: 'pipe', timeout: 15000 });
+        execSync(`icacls "${resourcesDir}" /grant *S-1-5-32-544:F /T /C /Q 2>nul`, { stdio: 'pipe', timeout: 15000 });
+        fs.copyFileSync(tmpFile, zhCNDest);
+        writeSuccess = true;
+        log('zh-CN.json 写入成功（takeown + icacls 授权后）。');
+      } catch (e2) {}
+    }
+
+    // 方法 3：写临时 PowerShell 脚本文件，以管理员身份执行（规避复杂字符串转义）
+    if (!writeSuccess && process.platform === 'win32') {
+      const psScriptPath = path.join(os.tmpdir(), 'claude_zh_install.ps1');
+      const psContent = [
+        `$src = '${tmpFile.replace(/'/g, "''")}'`,
+        `$dest = '${zhCNDest.replace(/'/g, "''")}'`,
+        `$dir = '${resourcesDir.replace(/'/g, "''")}'`,
+        `takeown /F "$dir" /A /R /D Y 2>$null`,
+        `icacls "$dir" /grant '*S-1-5-32-544:F' /T /C /Q 2>$null`,
+        `try { Copy-Item -LiteralPath $src -Destination $dest -Force -ErrorAction Stop; Write-Output "OK" } catch { Write-Output "FAIL: $_" }`,
+      ].join('\r\n');
+      fs.writeFileSync(psScriptPath, psContent, 'utf8');
+      try {
+        execSync(
+          `powershell -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-ExecutionPolicy Bypass -File \\"${psScriptPath}\\"'"`,
+          { stdio: 'ignore', timeout: 30000 }
+        );
+        if (fs.existsSync(zhCNDest)) {
           writeSuccess = true;
-          log('zh-CN.json 写入成功（takeown 授权后复制）。');
-        } catch (e2) {
-          try {
-            const psScript = `takeown /F ''${resourcesDir}'' /A /D Y; icacls ''${resourcesDir}'' /grant Administrators:F /C; Copy-Item -LiteralPath ''${tmpFile}'' -Destination ''${zhCNDest}'' -Force`;
-            execSync(`powershell -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command ${psScript}'"`, { stdio: 'ignore' });
-            if (fs.existsSync(zhCNDest)) {
-              writeSuccess = true;
-              log('zh-CN.json 写入成功（UAC 提权复制）。');
-            }
-          } catch (e3) {}
+          log('zh-CN.json 写入成功（UAC 提权脚本执行）。');
         }
-      }
+      } catch (e3) {}
+      try { fs.unlinkSync(psScriptPath); } catch(e) {}
+    }
+
+    // 方法 4：robocopy（通常可绕过普通 NTFS 只读保护）
+    if (!writeSuccess && process.platform === 'win32') {
+      try {
+        const srcDir = path.dirname(tmpFile);
+        const srcFile = path.basename(tmpFile);
+        execSync(`robocopy "${srcDir}" "${resourcesDir}" "${srcFile}" /R:2 /W:1 /NFL /NDL /NJH /NJS /NP`, { stdio: 'pipe', timeout: 15000 });
+        // robocopy copies with original name, rename it
+        const copiedPath = path.join(resourcesDir, srcFile);
+        if (fs.existsSync(copiedPath)) {
+          fs.renameSync(copiedPath, zhCNDest);
+          writeSuccess = true;
+          log('zh-CN.json 写入成功（robocopy 方式）。');
+        }
+      } catch (e4) {}
     }
 
     if (!writeSuccess) {
-      throw new Error(`无法写入 zh-CN.json 到 Claude Desktop 目录。\n请右键以管理员身份运行 Run_Localizer.bat 后重试。`);
+      throw new Error(
+        `无法写入 zh-CN.json 到 Claude Desktop 目录（${resourcesDir}）。\n` +
+        `已尝试直接复制、takeown 夺权、UAC 提权脚本、robocopy，均失败。\n\n` +
+        `手动解决方案：\n` +
+        `  1. 右键 Run_Localizer.bat → 以管理员身份运行\n` +
+        `  2. 或手动将以下文件复制到 Claude resources 目录：\n` +
+        `     源文件：${tmpFile}\n` +
+        `     目标：  ${zhCNDest}`
+      );
     }
+
 
     // 检查 Windows 系统首选语言是否包含中文
     let sysLangs = [];
