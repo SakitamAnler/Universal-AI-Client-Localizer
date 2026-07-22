@@ -486,7 +486,9 @@ function applyTranslations() {
       log(`${desc} 已存在注入，跳过（避免重复）。`);
       return true;
     }
-    fs.appendFileSync(filePath, content, 'utf-8');
+    // 强制换行与分号隔离 (\n;\n)，防止目标 JS 尾部为未加分号的 require(...) 导致模块语法融合报错 (TypeError: require(...) is not a function)
+    const safeContent = '\n;\n' + content + '\n;\n';
+    fs.appendFileSync(filePath, safeContent, 'utf-8');
     log(`已向 ${path.basename(filePath)} 注入 ${desc}。`);
     return true;
   }
@@ -512,6 +514,8 @@ function applyTranslations() {
   // 1. 尝试注入到常见的 Preload 和 Entry 文件 (自适应 Antigravity / OpenCode / Codex / ChatGPT / Claude / Windsurf)
   let injectedCount = 0;
   const candidatePreloadFiles = [
+    path.join(EXTRACT_DIR, 'out', 'renderer', 'oc-theme-preload.js'),
+    path.join(EXTRACT_DIR, 'out', 'preload', 'index.js'),
     path.join(EXTRACT_DIR, 'dist', 'preload.js'),
     path.join(EXTRACT_DIR, 'preload.js'),
     path.join(EXTRACT_DIR, 'dist', 'ideInstall', 'wizardPreload.js'),
@@ -534,14 +538,15 @@ function applyTranslations() {
     // 递归寻找解包目录下的 Web 渲染与预加载 JS 文件进行自适应注入
     try {
       function scanAndInject(dir, depth = 0) {
-        if (depth > 3 || !fs.existsSync(dir)) return;
+        if (depth > 4 || !fs.existsSync(dir)) return;
         const items = fs.readdirSync(dir);
         for (const item of items) {
           const full = path.join(dir, item);
+          if (full.includes('\\main\\') || full.includes('/main/')) continue; // 绝对不上抹 Main 主进程目录
           try {
             if (fs.statSync(full).isDirectory()) {
               scanAndInject(full, depth + 1);
-            } else if (item.endsWith('.js') && (item.includes('preload') || item.includes('renderer') || item.includes('index') || item.includes('bundle'))) {
+            } else if (item.endsWith('.js') && (item.includes('preload') || item.includes('renderer') || item.includes('oc-theme'))) {
               if (safeAppendOnce(full, DOM_TRANSLATOR_INJECTION, 'Universal AI Client Chinese Localization Engine', `Web UI 实时汉化引擎 (${path.relative(EXTRACT_DIR, full)})`)) {
                 injectedCount++;
               }
