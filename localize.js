@@ -157,19 +157,38 @@ function detectInstalledApps() {
   addIfValid('claude', 'Claude Desktop 客户端', path.join(localAppData, 'Programs', 'claude-desktop'));
   addIfValid('windsurf', 'Windsurf AI 客户端', path.join(localAppData, 'Programs', 'Windsurf'));
 
-  // 2. 微软商店 (Packages) 扫描
-  if (isWin && localAppData) {
-    const packagesDir = path.join(localAppData, 'Packages');
-    if (fs.existsSync(packagesDir)) {
+  // 2. 深度扫描 Windows Store (Packages 与 WindowsApps 目录)
+  if (isWin) {
+    if (localAppData) {
+      const packagesDir = path.join(localAppData, 'Packages');
+      if (fs.existsSync(packagesDir)) {
+        try {
+          const pkgs = fs.readdirSync(packagesDir);
+          for (const pkg of pkgs) {
+            const lowerPkg = pkg.toLowerCase();
+            if (lowerPkg.includes('chatgpt') || lowerPkg.includes('codex') || lowerPkg.includes('openai') || lowerPkg.includes('opencode')) {
+              const pkgPath = path.join(packagesDir, pkg);
+              addIfValid('codex', 'ChatGPT / Codex (微软商店版)', pkgPath);
+              addIfValid('codex', 'ChatGPT / Codex (微软商店版)', path.join(pkgPath, 'app'));
+              addIfValid('codex', 'ChatGPT / Codex (微软商店版)', path.join(pkgPath, 'LocalCache'));
+              addIfValid('codex', 'ChatGPT / Codex (微软商店版)', path.join(pkgPath, 'LocalCache', 'Local'));
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    // 扫描 C:\Program Files\WindowsApps 系统级微软商店全量打包目录
+    const winAppsDir = path.join(programFiles, 'WindowsApps');
+    if (fs.existsSync(winAppsDir)) {
       try {
-        const pkgs = fs.readdirSync(packagesDir);
-        for (const pkg of pkgs) {
-          const lowerPkg = pkg.toLowerCase();
-          if (lowerPkg.includes('chatgpt') || lowerPkg.includes('codex') || lowerPkg.includes('openai') || lowerPkg.includes('opencode')) {
-            const pkgPath = path.join(packagesDir, pkg);
-            addIfValid('codex', 'ChatGPT / Codex (微软商店版)', pkgPath);
-            addIfValid('codex', 'ChatGPT / Codex (微软商店版)', path.join(pkgPath, 'LocalCache'));
-            addIfValid('codex', 'ChatGPT / Codex (微软商店版)', path.join(pkgPath, 'LocalCache', 'Local'));
+        const apps = fs.readdirSync(winAppsDir);
+        for (const appItem of apps) {
+          const lowerItem = appItem.toLowerCase();
+          if (lowerItem.includes('chatgpt') || lowerItem.includes('codex') || lowerItem.includes('openai') || lowerItem.includes('opencode')) {
+            const appPath = path.join(winAppsDir, appItem);
+            addIfValid('codex', 'ChatGPT / Codex (微软商店 WindowsApps 版)', appPath);
+            addIfValid('codex', 'ChatGPT / Codex (微软商店 WindowsApps 版)', path.join(appPath, 'app'));
           }
         }
       } catch (e) {}
