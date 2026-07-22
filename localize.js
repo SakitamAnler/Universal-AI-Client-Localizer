@@ -722,20 +722,46 @@ async function runLocalizationWorkflow(appDir) {
   // 6. Repack to temporary file
   const tempAsar = path.join(WORKSPACE_DIR, 'app.asar.temp');
   if (fs.existsSync(tempAsar)) {
-    fs.unlinkSync(tempAsar);
+    try { fs.unlinkSync(tempAsar); } catch(e){}
   }
 
   log('正在将修改后的文件重新打包为 app.asar...');
   try {
-    execSync(`${getAsarCmd()} pack "${EXTRACT_DIR}" "${tempAsar}"`, { cwd: WORKSPACE_DIR });
-    log('打包成功。');
+    // 使用 --unpack "*.node" 保留原生 C++ 模块解压状态，防止 Claude Desktop / Electron 原生 C++ 扩展崩溃闪退
+    execSync(`${getAsarCmd()} pack "${EXTRACT_DIR}" "${tempAsar}" --unpack "*.node"`, { cwd: WORKSPACE_DIR });
+    log('打包成功 (原生的 C++ .node 模块已自动解除压缩锁定)。');
   } catch (e) {
-    throw new Error('打包新 asar 失败: ' + e.message);
+    try {
+      execSync(`${getAsarCmd()} pack "${EXTRACT_DIR}" "${tempAsar}"`, { cwd: WORKSPACE_DIR });
+      log('打包成功。');
+    } catch (err) {
+      throw new Error('打包新 asar 失败: ' + e.message);
+    }
   }
 
-  // 7. Deploy newly packed app.asar
+  // 7. Deploy newly packed app.asar AND app.asar.unpacked (if present)
   log('正在部署新的汉化 app.asar...');
   safeCopyFile(tempAsar, asarPath);
+
+  const tempUnpacked = path.join(WORKSPACE_DIR, 'app.asar.unpacked');
+  const targetUnpacked = path.join(resourcesDir, 'app.asar.unpacked');
+  if (fs.existsSync(tempUnpacked)) {
+    log('正在部署原生的 app.asar.unpacked 依赖库...');
+    try {
+      if (process.platform === 'win32') {
+        const psScript = `takeown /F ''${targetUnpacked}'' /A /R /D Y; icacls ''${targetUnpacked}'' /grant Administrators:F /T /C; Copy-Item -LiteralPath ''${tempUnpacked}'' -Destination ''${targetUnpacked}'' -Recurse -Force`;
+        execSync(`powershell -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command ${psScript}'"`, { stdio: 'ignore' });
+      } else {
+        execSync(`cp -R "${tempUnpacked}" "${targetUnpacked}"`, { stdio: 'ignore' });
+      }
+    } catch(e){}
+    try {
+      if (typeof fs.rmSync === 'function') {
+        fs.rmSync(tempUnpacked, { recursive: true, force: true });
+      }
+    } catch(e){}
+  }
+
   if (fs.existsSync(tempAsar)) {
     try { fs.unlinkSync(tempAsar); } catch(e) {}
   }
