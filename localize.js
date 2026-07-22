@@ -343,6 +343,7 @@ const DOM_TRANSLATOR_INJECTION = `
     "Model": "模型",
     "Chat": "对话",
     "New Chat": "新建对话",
+    "New Conversation": "新建对话",
     "Clear Chat": "清空对话",
     "Delete Chat": "删除对话",
     "History": "历史记录",
@@ -389,7 +390,44 @@ const DOM_TRANSLATOR_INJECTION = `
     "Paste": "粘贴",
     "Select All": "全选",
     "Minimize": "最小化",
-    "Quit": "退出"
+    "Quit": "退出",
+
+    // AI Chat UI Common Strings (Claude Desktop, Antigravity, OpenCode, Codex, ChatGPT)
+    "What can I help you with today?": "今天我能为您做什么？",
+    "Reply to Claude...": "发送消息给 Claude...",
+    "Ask Claude anything...": "向 Claude 提问...",
+    "Start a new chat": "开始新对话",
+    "Projects": "项目",
+    "Artifacts": "工件列表",
+    "Star": "收藏",
+    "Starred": "已收藏",
+    "Share": "分享",
+    "Delete": "删除",
+    "Pin": "置顶",
+    "Unpin": "取消置顶",
+    "Rename": "重命名",
+    "Chat history": "对话历史",
+    "Upgrade to Pro": "升级到 Pro",
+    "Upgrade": "升级",
+    "Billing": "账单与订阅",
+    "Plan": "订阅套餐",
+    "Usage": "使用量",
+    "Prompt": "提示词",
+    "Response": "回复",
+    "Thought": "思考过程",
+    "Thinking...": "思考中...",
+    "Reasoning": "推理过程",
+    "Attachments": "附件",
+    "Add attachment": "添加附件",
+    "Code": "代码",
+    "Preview": "预览",
+    "Style": "样式",
+    "Dark mode": "深色模式",
+    "Light mode": "浅色模式",
+    "Hardware Buddy & Maker Devices": "硬件伙伴 & 创客设备",
+    "Developer Mode": "开发者模式",
+    "Free Up Cowork Disk Space": "清理 Cowork 磁盘空间",
+    "Import Claude Code CLI sessions": "导入 Claude Code CLI 会话"
   };
 
   function translateText(text) {
@@ -504,6 +542,9 @@ function applyTranslations() {
   // 1. 尝试注入到常见的 Preload 和 Entry 文件 (自适应 Antigravity / OpenCode / Codex / ChatGPT / Claude / Windsurf)
   let injectedCount = 0;
   const candidatePreloadFiles = [
+    path.join(EXTRACT_DIR, '.vite', 'renderer', 'preload', 'index.js'),
+    path.join(EXTRACT_DIR, '.vite', 'build', 'mainWindow.js'),
+    path.join(EXTRACT_DIR, '.vite', 'build', 'mainView.js'),
     path.join(EXTRACT_DIR, 'out', 'renderer', 'oc-theme-preload.js'),
     path.join(EXTRACT_DIR, 'out', 'preload', 'index.js'),
     path.join(EXTRACT_DIR, 'dist', 'preload.js'),
@@ -528,7 +569,7 @@ function applyTranslations() {
     // 递归寻找解包目录下的 Web 渲染与预加载 JS 文件进行自适应注入
     try {
       function scanAndInject(dir, depth = 0) {
-        if (depth > 4 || !fs.existsSync(dir)) return;
+        if (depth > 6 || !fs.existsSync(dir)) return;
         const items = fs.readdirSync(dir);
         for (const item of items) {
           const full = path.join(dir, item);
@@ -536,7 +577,7 @@ function applyTranslations() {
           try {
             if (fs.statSync(full).isDirectory()) {
               scanAndInject(full, depth + 1);
-            } else if (item.endsWith('.js') && (item.includes('preload') || item.includes('renderer') || item.includes('oc-theme'))) {
+            } else if (item.endsWith('.js') && (item.includes('preload') || item.includes('renderer') || item.includes('mainWindow') || item.includes('mainView') || item.includes('oc-theme'))) {
               if (safeAppendOnce(full, DOM_TRANSLATOR_INJECTION, 'Universal AI Client Chinese Localization Engine', `Web UI 实时汉化引擎 (${path.relative(EXTRACT_DIR, full)})`)) {
                 injectedCount++;
               }
