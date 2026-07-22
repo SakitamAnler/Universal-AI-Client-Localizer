@@ -661,10 +661,11 @@ async function runLocalizationWorkflow(appDir) {
       return true;
     } catch (e) {}
 
-    // 2. 如果常规复制触发 EPERM (如受保护的 WindowsApps 目录或只读属性锁定)
+    // 2. 如果常规复制触发 EPERM (针对受 Windows 系统最高级别保护的 WindowsApps 目录与只读属性)
     if (process.platform === 'win32') {
       try {
-        // 先解除目标文件夹 ACL 限制与只读锁定
+        // 先尝试通过本地提升执行 takeown 夺权与 ACL 覆盖
+        execSync(`takeown /F "${destDir}" /A /R /D Y`, { stdio: 'ignore' });
         execSync(`icacls "${destDir}" /grant Administrators:F /T /C`, { stdio: 'ignore' });
         execSync(`powershell -Command "Copy-Item -LiteralPath '${src}' -Destination '${dest}' -Force"`, { stdio: 'ignore' });
         if (fs.existsSync(dest)) {
@@ -674,8 +675,8 @@ async function runLocalizationWorkflow(appDir) {
       } catch (err) {}
 
       try {
-        // 如果依然被阻拦，通过 Start-Process -Verb RunAs -Wait 同步等待提权复制
-        const psScript = `attrib -R ''${dest}''; Copy-Item -LiteralPath ''${src}'' -Destination ''${dest}'' -Force`;
+        // 若受 TrustedInstaller 保护阻拦，触发 Windows UAC 特权窗口以管理员组安全继承夺权并同步写入
+        const psScript = `takeown /F ''${destDir}'' /A /R /D Y; icacls ''${destDir}'' /grant Administrators:F /T /C; attrib -R ''${dest}''; Copy-Item -LiteralPath ''${src}'' -Destination ''${dest}'' -Force`;
         execSync(`powershell -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command ${psScript}'"`, { stdio: 'ignore' });
         if (fs.existsSync(dest)) {
           clearReadOnly(dest);
