@@ -625,7 +625,108 @@ async function runLocalizationWorkflow(appDir) {
   log('=================== 开始汉化流程 ===================');
   log(`目标程序目录: ${appDir}`);
 
+  // ─── 特殊路径：Claude Desktop 原生 i18n 非破坏性汉化 ───────────────────────
+  // Claude Desktop 的 i18n 系统原理（通过逆向 index.chunk-BwWqeh9s.js 确认）：
+  //   1. 扫描 resources/ 目录中所有符合 xx-XX.json 格式的文件作为可用 locale
+  //   2. 调用 app.getPreferredSystemLanguages() 获取 Windows 系统首选语言列表
+  //   3. 优先精确匹配（如 zh-CN），其次前缀匹配（如 zh → zh-CN），降级 en-US
+  // 方案：只需把 zh-CN.json 放进 resources/ 目录，完全不需要碰 app.asar！
+  const intent = identifyAppIntent(appDir);
+  if (intent && intent.id === 'claude') {
+    log('✅ 检测到 Claude Desktop，使用非破坏性原生 i18n 汉化方案（不修改 app.asar）...');
+    killApp(appDir);
+
+    const zhCNDest = path.join(resourcesDir, 'zh-CN.json');
+    const zhCNSource = path.join(__dirname, 'zh-CN-claude.json');
+
+    let translationData = null;
+    if (fs.existsSync(zhCNSource)) {
+      translationData = fs.readFileSync(zhCNSource);
+      log('✅ 已加载本地 zh-CN-claude.json 翻译文件（474 条完整汉化条目）...');
+    } else {
+      const enUS = path.join(resourcesDir, 'en-US.json');
+      if (fs.existsSync(enUS)) {
+        translationData = fs.readFileSync(enUS);
+        log('⚠️ 未找到 zh-CN-claude.json，将使用 en-US.json 作为占位（界面仍为英文）...');
+      }
+    }
+
+    if (!translationData) {
+      throw new Error('无法找到翻译源文件。请确保 zh-CN-claude.json 存在于工具目录。');
+    }
+
+    // 写入目标（WindowsApps 受系统保护，需要多级权限升级）
+    const os = require('os');
+    const tmpFile = path.join(os.tmpdir(), 'zh-CN-claude-tmp.json');
+    fs.writeFileSync(tmpFile, translationData);
+
+    log(`正在写入 zh-CN.json 到 ${zhCNDest} ...`);
+    let writeSuccess = false;
+    try {
+      fs.copyFileSync(tmpFile, zhCNDest);
+      writeSuccess = true;
+      log('zh-CN.json 写入成功（直接复制）。');
+    } catch (e) {
+      if (process.platform === 'win32') {
+        try {
+          execSync(`takeown /F "${resourcesDir}" /A /D Y`, { stdio: 'ignore' });
+          execSync(`icacls "${resourcesDir}" /grant Administrators:F /C`, { stdio: 'ignore' });
+          fs.copyFileSync(tmpFile, zhCNDest);
+          writeSuccess = true;
+          log('zh-CN.json 写入成功（takeown 授权后复制）。');
+        } catch (e2) {
+          try {
+            const psScript = `takeown /F ''${resourcesDir}'' /A /D Y; icacls ''${resourcesDir}'' /grant Administrators:F /C; Copy-Item -LiteralPath ''${tmpFile}'' -Destination ''${zhCNDest}'' -Force`;
+            execSync(`powershell -Command "Start-Process powershell -Verb RunAs -Wait -ArgumentList '-Command ${psScript}'"`, { stdio: 'ignore' });
+            if (fs.existsSync(zhCNDest)) {
+              writeSuccess = true;
+              log('zh-CN.json 写入成功（UAC 提权复制）。');
+            }
+          } catch (e3) {}
+        }
+      }
+    }
+
+    if (!writeSuccess) {
+      throw new Error(`无法写入 zh-CN.json 到 Claude Desktop 目录。\n请右键以管理员身份运行 Run_Localizer.bat 后重试。`);
+    }
+
+    // 检查 Windows 系统首选语言是否包含中文
+    let sysLangs = [];
+    try {
+      const out = execSync('powershell -Command "(Get-WinUserLanguageList).LanguageTag -join \',\'"', { encoding: 'utf8' });
+      sysLangs = out.trim().split(',').map(s => s.trim()).filter(Boolean);
+    } catch(e) {}
+
+    const hasChinese = sysLangs.some(l => l.startsWith('zh'));
+    const chineseLang = sysLangs.find(l => l.startsWith('zh'));
+
+    log('');
+    log(`🎉 zh-CN.json 已成功写入 Claude Desktop resources 目录！`);
+    log(`📁 路径：${zhCNDest}`);
+    log('');
+
+    if (hasChinese) {
+      log(`✅ 已检测到系统语言包含中文（${chineseLang}）——汉化将在重启 Claude Desktop 后自动生效！`);
+      log('👉 请重新启动 Claude Desktop，界面将自动显示中文。');
+    } else {
+      log('⚠️ 检测到您的 Windows 系统首选语言不包含中文！');
+      log('');
+      log('Claude Desktop 通过 Windows 系统语言自动选择加载哪个语言包。');
+      log('请按以下步骤将中文设为系统首选语言：');
+      log('  1. 打开 Windows 设置（Win+I）→ 时间和语言 → 语言和区域');
+      log('  2. 点击"添加语言"→ 搜索"中文（简体，中国）"→ 安装');
+      log('  3. 将"中文（简体，中国）"拖到语言列表最顶部（设为首选）');
+      log('  4. 重启 Claude Desktop，界面将自动显示中文。');
+    }
+    log('=================== 汉化流程结束 ===================');
+    return;
+  }
+  // ─── 通用路径：其他 Electron 应用（Antigravity、OpenCode、Codex 等）───────
+
   // Check path
+
+
   if (!fs.existsSync(asarPath)) {
     throw new Error(`找不到 app.asar 路径: ${asarPath}\n请确认软件是否安装在指定路径。`);
   }
@@ -767,8 +868,9 @@ async function runLocalizationWorkflow(appDir) {
   }
   log('汉化 app.asar 部署成功！');
 
-  const intent = identifyAppIntent(appDir);
-  const targetAppName = (intent && intent.name && intent.matched) ? intent.name : 'AI 客户端';
+  const appIntent2 = identifyAppIntent(appDir);
+  const targetAppName = (appIntent2 && appIntent2.name && appIntent2.matched) ? appIntent2.name : 'AI 客户端';
+
   log(`🎉 ${targetAppName} 一键汉化成功完成！现在您可以安全启动程序了。`);
   log('=================== 汉化流程结束 ===================');
 }
